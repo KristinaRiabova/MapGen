@@ -1,9 +1,13 @@
 ﻿using Kse.Algorithms.Samples;
 
+int height = 10;
+int width = 30;
+
 bool IsEquel(Point a, Point b)
 {
     return a.Column == b.Column && a.Row == b.Row;
 }
+
 
 bool IsWall(string c)
 {
@@ -20,7 +24,8 @@ void PrintMapWithPath(string[,] map, List<Point> path)
         if (IsEquel(p, start))
         {
             map[p.Column, p.Row] = "A";
-        } else if (IsEquel(p, end))
+        } 
+        else if (IsEquel(p, end))
         {
             map[p.Column, p.Row] = "B";
         }
@@ -29,6 +34,7 @@ void PrintMapWithPath(string[,] map, List<Point> path)
             map[p.Column, p.Row] = ".";
         }
     }
+
     new MapPrinter().Print(map);
 }
 
@@ -37,27 +43,105 @@ List<Point> GetNeighbours(string[,] map, Point p)
     List<Point> result = new List<Point>();
     int px = p.Column;
     int py = p.Row;
-    
+
     if (py + 1 < map.GetLength(1) && py + 1 >= 0 && px < map.GetLength(0) && px >= 0 && !IsWall(map[px, py + 1]))
     {
-        result.Add(new Point(px , py+1));
+        result.Add(new Point(px, py + 1));
     }
     if (py - 1 < map.GetLength(1) && py - 1 >= 0 && px < map.GetLength(0) && px >= 0 && !IsWall(map[px, py - 1]))
     {
-        result.Add(new Point(px , py-1));
+        result.Add(new Point(px, py - 1));
     }
-    if (py < map.GetLength(1) && py >= 0 && px + 1 < map.GetLength(0) && px+1 >= 0 && !IsWall(map[px + 1, py]))
+    if (py < map.GetLength(1) && py >= 0 && px + 1 < map.GetLength(0) && px + 1 >= 0 && !IsWall(map[px + 1, py]))
     {
-        result.Add(new Point(px + 1 , py));
+        result.Add(new Point(px + 1, py));
     }
     if (py < map.GetLength(1) && py >= 0 && px - 1 < map.GetLength(0) && px - 1 >= 0 && !IsWall(map[px - 1, py]))
     {
-        result.Add(new Point(px - 1 , py));
+        result.Add(new Point(px - 1, py));
     }
+
     return result;
 }
 
-List<Point> SearchBFS(string[,] map, Point start, Point end)
+List<Point> SearchDijkstra(string[,] map, Point start, Point end)
+{
+    
+    List<Point> unvisited = new List<Point>();
+    Dictionary<Point, float> distance = new Dictionary<Point, float>();
+    
+    Dictionary<Point, Point?> previous = new Dictionary<Point, Point?>();
+
+    
+    
+    foreach (int i in Enumerable.Range(0, map.GetLength(0)))
+    {
+        foreach (int j in Enumerable.Range(0, map.GetLength(1)))
+        {
+            Point p = new Point(i, j);
+            unvisited.Add(p);
+            distance.Add(p, float.MaxValue);
+            previous.Add(p, null);
+        }
+    }
+    
+    
+    distance[start] = 0;
+
+    
+    while (unvisited.Count > 0)
+    {
+        
+        Point currentPoint = unvisited.OrderBy(p => distance[p]).First();
+
+        
+        if (IsEquel(currentPoint, end))
+        {
+            break;
+        }
+    
+        
+        unvisited.Remove(currentPoint);
+        
+        
+        foreach (Point neighbour in GetNeighbours(map, currentPoint))
+        {
+            
+            float alt = distance[currentPoint] + 1; 
+            
+            
+            if (alt < distance[neighbour])
+            {
+                
+                distance[neighbour] = alt;
+                previous[neighbour] = currentPoint;
+            }
+        }
+    }
+    
+    
+    List<Point> path = new List<Point>();
+    Point? current = end;
+    
+    
+    if (previous[current.Value] == null)
+    {
+        return path;
+    }
+
+    while (current != null)
+    {
+        
+        path.Add(current.Value);
+        
+        current = previous[current.Value];
+    }
+     
+    
+    path.Reverse();
+    return path;
+}
+/*List<Point> SearchBFS(string[,] map, Point start, Point end)
 {
     Queue<Point> frontier = new Queue<Point>();
     Dictionary<Point, Point?> cameFrom = new Dictionary<Point, Point?>();
@@ -92,34 +176,21 @@ List<Point> SearchBFS(string[,] map, Point start, Point end)
     path.Reverse();
     return path;
 }
-var generator = new MapGenerator(new MapGeneratorOptions()
-{
-    Height = 35,
-    Width = 90,
-    Seed = 12312,
-    
-});
+);*/
 
-string[,] map = generator.Generate();
-
-/*List<Point> path = new List<Point>(new Point[]
+    var generator = new MapGenerator(new MapGeneratorOptions()
     {
-        new Point(0,0),
-        new Point(1,0),
-        new Point(2,0),
-        new Point(3,0),
-    }
-);
-Point p = new Point(8, 2);
-map[8, 2] = "X";*
-/*foreach (Point n in  GetNeighbours(map,p))
-{
-    map[n.Column, n.Row] = "M";
-}*/
-Point start = new Point(0, 0);
-Point end = new Point(0, 2);
-List<Point> path = SearchBFS(map, start, end);
+        Height = height,
+        Width = width,
+        Seed = 3234,
+        Noise = 0.1f
+    });
 
-PrintMapWithPath(map,path);
-//PrintMapWithPath(map,path);
-//new MapPrinter().Print(map);
+    string[,] map = generator.Generate();
+
+
+    Point start = new Point(0, 0);
+    Point end = new Point(29, 7);
+    List<Point> path = SearchDijkstra(map, start, end);
+    Console.WriteLine("");
+    PrintMapWithPath(map, path);
