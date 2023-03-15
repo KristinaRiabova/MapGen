@@ -239,11 +239,11 @@ for (int i = 0; i < neededKms.Length; i++)
 
 
     
-    Point start = new Point(0, 0);
-    Point end = new Point(29, 7);
-    List<Point> path = SearchDijkstra(map, start, end);
-    PrintMapWithPath(map, path);
-    for (int i = 0; i < counter.Length; i++)
+Point start = new Point(0, 0);
+Point end = new Point(29, 7);
+List<Point> path = SearchDijkstra(map, start, end);
+PrintMapWithPath(map, path);
+for (int i = 0; i < counter.Length; i++)
     {
         if (counter[i] == 0) continue;
         else
